@@ -24,6 +24,42 @@ services:
     volumes:
       - ${APP_DATA_DIR}/data/gluetun:/gluetun
 
+  # Runs once before qBittorrent starts and applies the settings qBittorrent
+  # needs to work behind Umbrel's app proxy (same idea as the official app):
+  # - turns off Host header validation (otherwise the web UI says "Unauthorized")
+  # - trusts Umbrel's proxy and lets Gluetun (localhost) update the port
+  # - sets the default login admin / adminadmin if no password was set yet
+  # - sets the download folder to /downloads if none was set yet
+  config:
+    image: debian:bookworm-slim
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/data/config:/config
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        CONF=/config/config/qBittorrent.conf
+        mkdir -p /config/config
+        touch "$$CONF"
+        grep -q '^\[WebUI\]' "$$CONF" || printf '\n[WebUI]\n' >> "$$CONF"
+        grep -q '^\[BitTorrent\]' "$$CONF" || printf '\n[BitTorrent]\n' >> "$$CONF"
+        setkey() {
+          if grep -q "^$$1=" "$$CONF"; then
+            sed -i "s|^$$1=.*|$$1=$$2|" "$$CONF"
+          else
+            sed -i "/^\[WebUI\]/a $$1=$$2" "$$CONF"
+          fi
+        }
+        setkey HostHeaderValidation false
+        setkey LocalHostAuth false
+        setkey ReverseProxySupportEnabled true
+        setkey TrustedReverseProxiesList 10.21.0.0/16
+        grep -q '^Password_PBKDF2=' "$$CONF" || sed -i '/^\[WebUI\]/a Password_PBKDF2="@ByteArray(gTzqQHUv3A1X43tLaAhaJQ==:ZBCIBA4honNZ7H66xdEoHpqBC/Vvwj17ZCjQKARSK78ScJWDMdWSfxezHG536UekAL/zpRn571MXCfhtdqiArA==)"' "$$CONF"
+        grep -q '^Session\\DefaultSavePath=' "$$CONF" || sed -i '/^\[BitTorrent\]/a Session\\DefaultSavePath=/downloads' "$$CONF"
+        chown -R 1000:1000 /config
+        echo "qBittorrent settings are ready"
+
   server:
     image: ghcr.io/hotio/qbittorrent:release-5.3.0
     restart: on-failure
@@ -31,7 +67,10 @@ services:
     # qBittorrent has no internet at all (built-in kill switch).
     network_mode: "service:gluetun"
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_started
+      config:
+        condition: service_completed_successfully
     environment:
       PUID: "1000"
       PGID: "1000"

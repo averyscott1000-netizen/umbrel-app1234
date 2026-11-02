@@ -2,7 +2,7 @@ manifestVersion: 1
 id: homelab-qbittorrent-vpn
 category: networking
 name: qBittorrent VPN
-version: "5.3.0"
+version: "5.3.0-1"
 tagline: qBittorrent that only connects through your VPN
 icon: https://getumbrel.github.io/umbrel-apps-gallery/qbittorrent/icon.svg
 description: >-
@@ -17,9 +17,8 @@ description: >-
   VPN_SERVICE_PROVIDER plus either the WireGuard or OpenVPN details from your
   VPN account. Apply and restart.
 
-  2. Get the temporary qBittorrent password from Settings > Advanced >
-  View logs (look for "temporary password"). Log in as "admin", then set a
-  permanent password in Tools > Options > WebUI.
+  2. Log in to qBittorrent as "admin" with password "adminadmin", then
+  change the password right away in Tools > Options > WebUI.
 
   3. Keep the default save path as /downloads so files land in your Umbrel
   Downloads folder.
@@ -33,7 +32,10 @@ submission: https://github.com/qdm12/gluetun
 repo: https://github.com/qBittorrent/qBittorrent
 support: https://github.com/qdm12/gluetun-wiki
 gallery: []
-releaseNotes: ""
+releaseNotes: >-
+  Fixes the "Unauthorized" page when opening qBittorrent through Umbrel, sets
+  the default login to admin / adminadmin, and lets Gluetun update the
+  forwarded port automatically.
 dependencies: []
 port: 8484
 path: ""

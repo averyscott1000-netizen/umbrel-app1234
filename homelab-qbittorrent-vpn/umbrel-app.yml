@@ -1,0 +1,74 @@
+manifestVersion: 1
+id: homelab-qbittorrent-vpn
+category: networking
+name: qBittorrent VPN
+version: "5.3.0"
+tagline: qBittorrent that only connects through your VPN
+icon: https://getumbrel.github.io/umbrel-apps-gallery/qbittorrent/icon.svg
+description: >-
+  qBittorrent running behind Gluetun, a VPN client container. All of
+  qBittorrent's traffic goes through your VPN, and if the VPN drops,
+  qBittorrent loses its connection instead of falling back to your home IP.
+
+
+  SET-UP
+
+  1. Right-click the app > Settings > Environment variables, and fill in
+  VPN_SERVICE_PROVIDER plus either the WireGuard or OpenVPN details from your
+  VPN account. Apply and restart.
+
+  2. Get the temporary qBittorrent password from Settings > Advanced >
+  View logs (look for "temporary password"). Log in as "admin", then set a
+  permanent password in Tools > Options > WebUI.
+
+  3. Keep the default save path as /downloads so files land in your Umbrel
+  Downloads folder.
+
+  4. In Radarr and Sonarr, add qBittorrent as a download client with host
+  homelab-qbittorrent-vpn_gluetun_1 and port 8080.
+developer: qBittorrent and Gluetun
+website: https://github.com/qdm12/gluetun
+submitter: Homelab
+submission: https://github.com/qdm12/gluetun
+repo: https://github.com/qBittorrent/qBittorrent
+support: https://github.com/qdm12/gluetun-wiki
+gallery: []
+releaseNotes: ""
+dependencies: []
+port: 8484
+path: ""
+defaultUsername: "admin"
+defaultPassword: ""
+environment:
+  - name: VPN_SERVICE_PROVIDER
+    services:
+      - gluetun
+    note: "Your VPN company as Gluetun names it, for example: mullvad, protonvpn, nordvpn, surfshark, private internet access, windscribe, airvpn."
+  - name: VPN_TYPE
+    services:
+      - gluetun
+    default: wireguard
+    options:
+      - wireguard
+      - openvpn
+    note: "Use wireguard if your VPN supports it (much faster). Use openvpn otherwise."
+  - name: WIREGUARD_PRIVATE_KEY
+    services:
+      - gluetun
+    note: "WireGuard only. The PrivateKey from a WireGuard config file generated in your VPN account."
+  - name: WIREGUARD_ADDRESSES
+    services:
+      - gluetun
+    note: "WireGuard only. The Address line from the same config file, for example 10.64.222.21/32. Not needed for every provider."
+  - name: OPENVPN_USER
+    services:
+      - gluetun
+    note: "OpenVPN only. Your VPN's OpenVPN/service username (often different from your account login)."
+  - name: OPENVPN_PASSWORD
+    services:
+      - gluetun
+    note: "OpenVPN only. Your VPN's OpenVPN/service password."
+  - name: SERVER_COUNTRIES
+    services:
+      - gluetun
+    note: "Optional. Pick a nearby country for best speed, for example: United States"

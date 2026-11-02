@@ -1,0 +1,43 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      # qBittorrent runs inside Gluetun's network, so its web UI is reached
+      # through the gluetun container. Umbrel login stays required.
+      APP_HOST: homelab-qbittorrent-vpn_gluetun_1
+      APP_PORT: 8080
+
+  gluetun:
+    image: qmcgaw/gluetun:v3
+    restart: on-failure
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    # Your VPN provider, keys and passwords are NOT set here. Set them in
+    # umbrelOS: right-click the app > Settings > Environment variables.
+    # Never put real keys or passwords in this file - the repo is public.
+    environment:
+      VPN_TYPE: "wireguard"
+      TZ: "America/New_York"
+    volumes:
+      - ${APP_DATA_DIR}/data/gluetun:/gluetun
+
+  server:
+    image: ghcr.io/hotio/qbittorrent:release-5.3.0
+    restart: on-failure
+    # All qBittorrent traffic goes through Gluetun. If the VPN is down,
+    # qBittorrent has no internet at all (built-in kill switch).
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      UMASK: "002"
+      TZ: "America/New_York"
+    volumes:
+      - ${APP_DATA_DIR}/data/config:/config
+      # Same shared Downloads folder the official media apps use (/downloads)
+      - ${UMBREL_ROOT}/data/storage/downloads:/downloads
